@@ -1,4 +1,4 @@
-import { PrismaClient, Status, UserRole, DiscountType } from "@prisma/client";
+import { PrismaClient, Status, UserRole, DiscountType, VoucherStatus } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -13,6 +13,48 @@ async function main() {
       logo: "☕",
       primaryColor: "#7c4a2d",
       accentColor: "#f4e9dc",
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: "owner@coffeeniche.id" },
+    update: { password: "$2b$12$zt9H8EIXIcVo9IWfMzb0Ve/a0XIE72udcxVCNw4zMv9JrJUsOr4Nq" },
+    create: {
+      id: "user-owner",
+      name: "Owner",
+      email: "owner@coffeeniche.id",
+      password: "$2b$12$zt9H8EIXIcVo9IWfMzb0Ve/a0XIE72udcxVCNw4zMv9JrJUsOr4Nq",
+      role: UserRole.OWNER,
+      status: Status.ACTIVE,
+      storeId: store.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: "admin@coffeeniche.id" },
+    update: { password: "$2b$12$zt9H8EIXIcVo9IWfMzb0Ve/a0XIE72udcxVCNw4zMv9JrJUsOr4Nq" },
+    create: {
+      id: "user-admin",
+      name: "Admin",
+      email: "admin@coffeeniche.id",
+      password: "$2b$12$zt9H8EIXIcVo9IWfMzb0Ve/a0XIE72udcxVCNw4zMv9JrJUsOr4Nq",
+      role: UserRole.ADMIN,
+      status: Status.ACTIVE,
+      storeId: store.id,
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: "kasir@coffeeniche.id" },
+    update: { password: "$2b$12$zt9H8EIXIcVo9IWfMzb0Ve/a0XIE72udcxVCNw4zMv9JrJUsOr4Nq" },
+    create: {
+      id: "user-cashier",
+      name: "Kasir",
+      email: "kasir@coffeeniche.id",
+      password: "$2b$12$zt9H8EIXIcVo9IWfMzb0Ve/a0XIE72udcxVCNw4zMv9JrJUsOr4Nq",
+      role: UserRole.CASHIER,
+      status: Status.ACTIVE,
+      storeId: store.id,
     },
   });
 
@@ -186,7 +228,7 @@ async function main() {
     },
   });
 
-  await prisma.product.upsert({
+  const cake = await prisma.product.upsert({
     where: { sku: "CAKE-CHOCO" },
     update: {},
     create: {
@@ -199,7 +241,20 @@ async function main() {
     },
   });
 
-  await prisma.product.upsert({
+  await prisma.productVariant.upsert({
+    where: { id: "variant-cake-default" },
+    update: {},
+    create: {
+      id: "variant-cake-default",
+      productId: cake.id,
+      name: "Default",
+      price: 25000,
+      isDefault: true,
+      status: Status.ACTIVE,
+    },
+  });
+
+  const pasta = await prisma.product.upsert({
     where: { sku: "FOOD-PASTA" },
     update: {},
     create: {
@@ -212,30 +267,50 @@ async function main() {
     },
   });
 
-  await prisma.discount.upsert({
-    where: { id: "disc-weekend" },
+  await prisma.productVariant.upsert({
+    where: { id: "variant-pasta-default" },
     update: {},
     create: {
-      id: "disc-weekend",
-      name: "Diskon Akhir Pekan",
-      type: DiscountType.PERCENTAGE,
-      value: 10,
-      isActive: true,
+      id: "variant-pasta-default",
+      productId: pasta.id,
+      name: "Default",
+      price: 40000,
+      isDefault: true,
       status: Status.ACTIVE,
     },
   });
 
-  await prisma.user.upsert({
-    where: { email: "owner@coffeeniche.id" },
+  await prisma.voucher.upsert({
+    where: { code: "WEEKEND10" },
     update: {},
     create: {
-      id: "user-owner",
-      name: "Owner",
-      email: "owner@coffeeniche.id",
-      password: "$2a$10$U1hMOu4Q2d6v8OwKf4Zr4e5J8nP3iJjvjl8ACn7mJ0u1R1S5XwZeO",
-      role: UserRole.OWNER,
-      status: Status.ACTIVE,
-      storeId: store.id,
+      id: "voucher-weekend",
+      code: "WEEKEND10",
+      name: "Diskon Akhir Pekan 10%",
+      type: DiscountType.PERCENTAGE,
+      value: 10,
+      minPurchase: 50000,
+      maxDiscount: 20000,
+      usageLimit: 100,
+      isActive: true,
+      status: VoucherStatus.ACTIVE,
+      createdById: "user-owner",
+    },
+  });
+
+  await prisma.voucher.upsert({
+    where: { code: "MEMBER5K" },
+    update: {},
+    create: {
+      id: "voucher-member",
+      code: "MEMBER5K",
+      name: "Potongan Member Rp5.000",
+      type: DiscountType.NOMINAL,
+      value: 5000,
+      minPurchase: 30000,
+      isActive: true,
+      status: VoucherStatus.ACTIVE,
+      createdById: "user-owner",
     },
   });
 

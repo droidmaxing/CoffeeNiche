@@ -30,15 +30,15 @@ NEXTAUTH_SECRET="replace-with-secure-secret"
 NEXT_PUBLIC_APP_NAME="CoffeeNiche"
 ```
 
-## Setup MySQL
+## Setup MySQL dengan Laragon
 
-Buat database lokal:
+Jalankan MySQL melalui Laragon. Untuk konfigurasi Laragon bawaan (user `root` tanpa password), URL koneksi di `.env` adalah:
 
-```sql
-CREATE DATABASE coffeeniche;
+```env
+DATABASE_URL="mysql://root@localhost:3306/coffeeniche"
 ```
 
-Pastikan MySQL sedang berjalan dan user `root` memiliki akses ke database tersebut.
+Jika Anda menggunakan password atau port MySQL berbeda, sesuaikan URL tersebut. Prisma akan membuat database `coffeeniche` saat menjalankan migrasi jika user MySQL memiliki izin.
 
 ## Install dependencies
 

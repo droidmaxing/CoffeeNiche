@@ -52,11 +52,20 @@ export type CartItem = {
   subtotal: number;
 };
 
-export type DiscountRule = {
+export type Voucher = {
   id: string;
+  code: string;
   name: string;
   type: "percentage" | "nominal";
   value: number;
+  minPurchase?: number;
+  maxDiscount?: number;
+  usageLimit?: number;
+  usedCount: number;
+  isActive: boolean;
+  status: "ACTIVE" | "INACTIVE" | "EXPIRED";
+  validFrom?: string | Date;
+  validUntil?: string | Date;
 };
 
 export type StoreSettings = {

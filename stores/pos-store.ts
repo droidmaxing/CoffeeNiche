@@ -1,10 +1,10 @@
 import { create } from "zustand";
 import { demoProducts, defaultCategories } from "@/lib/data";
-import type { CartItem, DiscountRule, ProductItem } from "@/types";
+import type { CartItem, Voucher, ProductItem } from "@/types";
 
-const defaultDiscounts: DiscountRule[] = [
-  { id: "percentage", name: "Persentase 10%", type: "percentage", value: 10 },
-  { id: "nominal", name: "Nominal Rp5.000", type: "nominal", value: 5000 },
+const demoVouchers: Voucher[] = [
+  { id: "voucher-weekend", code: "WEEKEND10", name: "Diskon Akhir Pekan 10%", type: "percentage", value: 10, minPurchase: 50000, maxDiscount: 20000, usageLimit: 100, usedCount: 0, isActive: true, status: "ACTIVE" },
+  { id: "voucher-member", code: "MEMBER5K", name: "Potongan Member Rp5.000", type: "nominal", value: 5000, minPurchase: 30000, usageLimit: 50, usedCount: 0, isActive: true, status: "ACTIVE" },
 ];
 
 type PosState = {
@@ -13,27 +13,30 @@ type PosState = {
   cart: CartItem[];
   selectedCategory: string;
   search: string;
-  discount: DiscountRule | null;
+  appliedVoucher: Voucher | null;
   paymentMethod: string;
-  addToCart: (product: ProductItem, variantId?: string) => void;
+  addToCart: (product: ProductItem, variantId?: string, selectedModifiers?: ProductItem["modifiers"]) => void;
   updateQuantity: (id: string, delta: number) => void;
   removeItem: (id: string) => void;
   clearCart: () => void;
   setSelectedCategory: (category: string) => void;
   setSearch: (value: string) => void;
-  setDiscount: (discount: DiscountRule | null) => void;
+  applyVoucher: (code: string) => boolean;
+  setAppliedVoucher: (voucher: Voucher | null) => void;
+  loadCatalog: (categories: typeof defaultCategories, products: ProductItem[]) => void;
+  removeVoucher: () => void;
   setPaymentMethod: (method: string) => void;
 };
 
-export const usePosStore = create<PosState>()((set) => ({
+export const usePosStore = create<PosState>()((set, get) => ({
   categories: defaultCategories,
   products: demoProducts,
   cart: [],
   selectedCategory: "all",
   search: "",
-  discount: null,
+  appliedVoucher: null,
   paymentMethod: "Cash",
-  addToCart: (product, variantId) => {
+  addToCart: (product, variantId, selectedModifiers = []) => {
     set((state) => {
       const variant = product.variants?.find((item) => item.id === variantId) ?? product.variants?.find((item) => item.isDefault) ?? null;
       const basePrice = variant ? variant.price : product.price ?? 0;
@@ -41,14 +44,15 @@ export const usePosStore = create<PosState>()((set) => ({
         (item) =>
           item.productId === product.id &&
           item.variantId === (variant?.id ?? undefined) &&
-          item.productName === product.name,
+          item.productName === product.name &&
+          item.selectedModifiers.map((modifier) => modifier.id).join(",") === selectedModifiers.map((modifier) => modifier.id).join(","),
       );
 
       if (existing) {
         return {
           cart: state.cart.map((item) =>
             item.id === existing.id
-              ? { ...item, quantity: item.quantity + 1, subtotal: (item.quantity + 1) * item.unitPrice }
+              ? { ...item, quantity: item.quantity + 1, subtotal: (item.quantity + 1) * (item.unitPrice + item.selectedModifiers.reduce((sum, modifier) => sum + modifier.price, 0)) }
               : item,
           ),
         };
@@ -63,7 +67,8 @@ export const usePosStore = create<PosState>()((set) => ({
         unitPrice: basePrice,
         quantity: 1,
         selectedModifiers: [],
-        subtotal: basePrice,
+        selectedModifiers,
+        subtotal: basePrice + selectedModifiers.reduce((sum, modifier) => sum + modifier.price, 0),
       };
 
       return { cart: [...state.cart, newItem] };
@@ -76,16 +81,27 @@ export const usePosStore = create<PosState>()((set) => ({
           if (item.id !== id) return item;
           const nextQty = Math.max(0, item.quantity + delta);
           if (nextQty === 0) return null;
-          return { ...item, quantity: nextQty, subtotal: nextQty * item.unitPrice };
+          return { ...item, quantity: nextQty, subtotal: nextQty * (item.unitPrice + item.selectedModifiers.reduce((sum, modifier) => sum + modifier.price, 0)) };
         })
         .filter(Boolean) as CartItem[],
     })),
   removeItem: (id) => set((state) => ({ cart: state.cart.filter((item) => item.id !== id) })),
-  clearCart: () => set({ cart: [] }),
+  clearCart: () => set({ cart: [], appliedVoucher: null }),
   setSelectedCategory: (category) => set({ selectedCategory: category }),
   setSearch: (value) => set({ search: value }),
-  setDiscount: (discount) => set({ discount }),
+  applyVoucher: (code) => {
+    const voucher = demoVouchers.find((v) => v.code.toUpperCase() === code.toUpperCase() && v.isActive && v.status === "ACTIVE");
+    if (!voucher) return false;
+    const subtotal = get().cart.reduce((sum, item) => sum + item.subtotal, 0);
+    if (voucher.minPurchase && subtotal < voucher.minPurchase) return false;
+    if (voucher.usageLimit && voucher.usedCount >= voucher.usageLimit) return false;
+    set({ appliedVoucher: voucher });
+    return true;
+  },
+  setAppliedVoucher: (voucher) => set({ appliedVoucher: voucher }),
+  loadCatalog: (categories, products) => set({ categories, products }),
+  removeVoucher: () => set({ appliedVoucher: null }),
   setPaymentMethod: (method) => set({ paymentMethod: method }),
 }));
 
-export const defaultDiscountOptions = defaultDiscounts;
+export const demoVoucherOptions = demoVouchers;

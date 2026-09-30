@@ -1,11 +1,11 @@
 "use client";
 
 import { usePosStore } from "@/stores/pos-store";
-import { Search, SlidersHorizontal, Plus, Minus, Trash2, CreditCard, Percent, Wallet } from "lucide-react";
+import { Search, SlidersHorizontal, Plus, Minus, Trash2, CreditCard, Percent, Wallet, Ticket, X } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 export default function TransactionsPage() {
-  const { categories, products, selectedCategory, setSelectedCategory, setSearch, search, cart, addToCart, updateQuantity, removeItem, discount, setDiscount, paymentMethod, setPaymentMethod } = usePosStore();
+  const { categories, products, selectedCategory, setSelectedCategory, setSearch, search, cart, addToCart, updateQuantity, removeItem, appliedVoucher, applyVoucher, removeVoucher, paymentMethod, setPaymentMethod } = usePosStore();
 
   const filteredProducts = products.filter((product) => {
     const byCategory = selectedCategory === "all" || product.categoryId === selectedCategory;
@@ -14,8 +14,29 @@ export default function TransactionsPage() {
   });
 
   const subtotal = cart.reduce((sum, item) => sum + item.subtotal, 0);
-  const discountValue = discount?.type === "percentage" ? (subtotal * (discount.value / 100)) : discount?.type === "nominal" ? discount.value : 0;
+  let discountValue = 0;
+  if (appliedVoucher) {
+    if (appliedVoucher.type === "percentage") {
+      discountValue = subtotal * (appliedVoucher.value / 100);
+      if (appliedVoucher.maxDiscount && discountValue > appliedVoucher.maxDiscount) {
+        discountValue = appliedVoucher.maxDiscount;
+      }
+    } else {
+      discountValue = appliedVoucher.value;
+    }
+  }
   const total = Math.max(subtotal - discountValue, 0);
+
+  const handleVoucherApply = (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget as HTMLFormElement);
+    const code = formData.get("voucherCode") as string;
+    if (code && applyVoucher(code)) {
+      (e.currentTarget as HTMLFormElement).reset();
+    } else {
+      alert("Voucher tidak valid atau tidak memenuhi syarat");
+    }
+  };
 
   return (
     <div className="flex h-full gap-6 p-6">
@@ -151,23 +172,33 @@ export default function TransactionsPage() {
 
           <div className="rounded-xl bg-white p-3">
             <div className="mb-2 flex items-center gap-2 text-sm font-medium text-[#3b2c26]">
-              <Percent className="h-4 w-4" />
-              Diskon
+              <Ticket className="h-4 w-4" />
+              Voucher
             </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setDiscount({ id: "percentage", name: "10%", type: "percentage", value: 10 })}
-                className={`flex-1 rounded-lg px-2 py-2 text-xs ${discount?.id === "percentage" ? "bg-[#7a4a2a] text-white" : "bg-[#f5eae0] text-[#4b3429]"}`}
-              >
-                10%
-              </button>
-              <button
-                onClick={() => setDiscount({ id: "nominal", name: "Rp5.000", type: "nominal", value: 5000 })}
-                className={`flex-1 rounded-lg px-2 py-2 text-xs ${discount?.id === "nominal" ? "bg-[#7a4a2a] text-white" : "bg-[#f5eae0] text-[#4b3429]"}`}
-              >
-                Rp5K
-              </button>
-            </div>
+            {appliedVoucher ? (
+              <div className="flex items-center justify-between rounded-lg bg-[#eaf7ef] px-3 py-2 text-sm text-[#2d7a46]">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">{appliedVoucher.name}</span>
+                  <span className="rounded-full bg-[#2d7a46] px-2 py-0.5 text-xs text-white">
+                    {appliedVoucher.type === "percentage" ? `${appliedVoucher.value}%` : formatCurrency(appliedVoucher.value)}
+                  </span>
+                </div>
+                <button onClick={removeVoucher} className="text-[#2d7a46]">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleVoucherApply} className="flex gap-2">
+                <input
+                  name="voucherCode"
+                  placeholder="Masukkan kode voucher"
+                  className="flex-1 rounded-xl border border-[#eadcc8] bg-[#f9f3ec] px-3 py-2 text-sm outline-none"
+                />
+                <button type="submit" className="rounded-xl bg-[#7a4a2a] px-3 py-2 text-sm font-medium text-white">
+                  Terapkan
+                </button>
+              </form>
+            )}
           </div>
 
           <div className="rounded-xl bg-white p-3">

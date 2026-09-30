@@ -30,6 +30,12 @@ enum DiscountType {
   NOMINAL
 }
 
+enum VoucherStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+}
+
 model Store {
   id            String        @id @default(cuid())
   name          String
@@ -45,19 +51,20 @@ model Store {
 }
 
 model User {
-  id        String     @id @default(cuid())
-  name      String
-  email     String     @unique
-  password  String
-  phone     String?
-  role      UserRole
-  status    Status     @default(ACTIVE)
-  storeId   String?
-  store     Store?     @relation(fields: [storeId], references: [id])
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  auditLogs AuditLog[]
-  transactions Transaction[]
+  id            String     @id @default(cuid())
+  name          String
+  email         String     @unique
+  password      String
+  phone         String?
+  role          UserRole
+  status        Status     @default(ACTIVE)
+  storeId       String?
+  store         Store?     @relation(fields: [storeId], references: [id])
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  auditLogs     AuditLog[]
+  transactions  Transaction[]
+  createdVouchers Voucher[] @relation("VoucherCreatedBy")
 }
 
 model Category {
@@ -123,17 +130,24 @@ model Modifier {
   updatedAt DateTime       @updatedAt
 }
 
-model Discount {
-  id         String        @id @default(cuid())
-  name       String
-  type       DiscountType
-  value      Decimal       @db.Decimal(10,2)
-  isActive   Boolean       @default(true)
-  status     Status        @default(ACTIVE)
-  validFrom  DateTime?
-  validUntil DateTime?
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
+model Voucher {
+  id          String        @id @default(cuid())
+  code        String        @unique
+  name        String
+  type        DiscountType
+  value       Decimal       @db.Decimal(10,2)
+  minPurchase Decimal?      @db.Decimal(10,2)
+  maxDiscount Decimal?      @db.Decimal(10,2)
+  usageLimit  Int?
+  usedCount   Int           @default(0)
+  isActive    Boolean       @default(true)
+  status      VoucherStatus @default(ACTIVE)
+  validFrom   DateTime?
+  validUntil  DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  createdById String?
+  createdBy   User?         @relation("VoucherCreatedBy", fields: [createdById], references: [id])
   transactions Transaction[]
 }
 
@@ -153,11 +167,14 @@ model Transaction {
   total           Decimal           @db.Decimal(10,2)
   paymentMethod   String?
   notes           String?
+  voucherCodeSnapshot String?
+  voucherNameSnapshot String?
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
+
   items           TransactionItem[]
-  discountRule    Discount?         @relation(fields: [discountId], references: [id], onDelete: SetNull)
-  discountId      String?
+  voucher         Voucher?          @relation(fields: [voucherId], references: [id], onDelete: SetNull)
+  voucherId       String?
 }
 
 model TransactionItem {

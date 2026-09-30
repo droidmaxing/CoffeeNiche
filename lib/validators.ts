@@ -26,6 +26,18 @@ export const settingsSchema = z.object({
   accentColor: z.string(),
 });
 
+export const voucherSchema = z.object({
+  code: z.string().min(1),
+  name: z.string().min(1),
+  type: z.enum(["percentage", "nominal"]),
+  value: z.number().min(0),
+  minPurchase: z.number().min(0).optional(),
+  maxDiscount: z.number().min(0).optional(),
+  usageLimit: z.number().int().min(1).optional(),
+  validFrom: z.date().optional(),
+  validUntil: z.date().optional(),
+});
+
 export const checkoutSchema = z.object({
   items: z.array(
     z.object({
@@ -45,8 +57,5 @@ export const checkoutSchema = z.object({
     }),
   ).min(1),
   paymentMethod: z.string().min(1),
-  discount: z.object({
-    type: z.enum(["percentage", "nominal"]),
-    value: z.number().min(0),
-  }).optional(),
+  voucherCode: z.string().optional(),
 });
