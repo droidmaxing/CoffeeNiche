@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CoffeeNiche POS
 
-## Getting Started
+Aplikasi web POS cafe/restaurant berbasis Next.js + TypeScript + MySQL + Prisma + Tailwind CSS + Zustand.
 
-First, run the development server:
+## Fitur
+
+- Dashboard operasional
+- POS / transaksi kasir
+- Riwayat transaksi
+- Manajemen menu, kategori, modifier, diskon
+- User role Owner/Admin/Kasir
+- Theme customization dan store settings
+- Database schema dengan MySQL + Prisma
+- Arsitektur modular untuk scalability
+
+## Prasyarat
+
+- Node.js 18+
+- MySQL 8+
+- npm
+
+## Setup environment
+
+1. Salin file `.env.example` menjadi `.env`
+2. Sesuaikan koneksi MySQL Anda:
+
+```bash
+DATABASE_URL="mysql://root:root@localhost:3306/coffeeniche"
+NEXTAUTH_SECRET="replace-with-secure-secret"
+NEXT_PUBLIC_APP_NAME="CoffeeNiche"
+```
+
+## Setup MySQL
+
+Buat database lokal:
+
+```sql
+CREATE DATABASE coffeeniche;
+```
+
+Pastikan MySQL sedang berjalan dan user `root` memiliki akses ke database tersebut.
+
+## Install dependencies
+
+```bash
+npm install
+```
+
+## Run Prisma migration
+
+```bash
+npx prisma migrate dev --name init
+```
+
+Jika ingin generate client tanpa migrasi:
+
+```bash
+npx prisma generate
+```
+
+## Seed data
+
+```bash
+npx tsx prisma/seed.ts
+```
+
+File `prisma/seed.ts` akan mengisi default data kategori, produk, dan store.
+
+## Menjalankan aplikasi
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Buka browser ke:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Build production
 
-## Learn More
+```bash
+npm run build
+npm run start
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Struktur utama
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `app/` - App Router pages
+- `components/` - UI components
+- `lib/` - utility, validation, data, Prisma client
+- `stores/` - Zustand store
+- `prisma/` - schema dan seed
+- `types/` - shared type definitions
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Catatan penting
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Data historis transaksi disimpan sebagai snapshot pada `TransactionItem`.
+- Transaksi tidak dibuat hard delete; status `VOID` digunakan untuk pembatalan.
+- Semua master data utama menggunakan status aktif/nonaktif agar aman untuk perubahan di masa depan.
