@@ -1,7 +1,9 @@
 version: "3.8"
 services:
   coffeeniche-app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: coffeeniche-app
     restart: unless-stopped
     ports:
