@@ -5,7 +5,7 @@ services:
     container_name: coffeeniche-app
     restart: unless-stopped
     ports:
-      - "3001:3000"
+      - "3002:3000"
     environment:
       DATABASE_URL: mysql://coffeeniche_user:coffeeniche_pass@coffeeniche-mysql:3306/coffeeniche_db
     depends_on:
@@ -24,10 +24,10 @@ services:
       coffeeniche-mysql:
         condition: service_healthy
     command: >
-      sh -c "npx prisma migrate deploy && npx tsx prisma/seed.ts"
+      sh -c "npx prisma generate && npx prisma migrate deploy && npx tsx prisma/seed.ts"
 
   coffeeniche-mysql:
-    image: mysql:8
+    image: mysql:8.0
     container_name: coffeeniche-mysql
     restart: unless-stopped
     environment:
