@@ -1,34 +1,6 @@
 version: "3.8"
 services:
-  coffeeniche-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: coffeeniche-app
-    restart: unless-stopped
-    ports:
-      - "3002:3000"
-    environment:
-      DATABASE_URL: mysql://coffeeniche_user:coffeeniche_pass@coffeeniche-mysql:3306/coffeeniche_db
-    depends_on:
-      coffeeniche-mysql:
-        condition: service_healthy
-      coffeeniche-migrate:
-        condition: service_completed_successfully
-
-  coffeeniche-migrate:
-    build: .
-    container_name: coffeeniche-migrate
-    restart: "no"
-    environment:
-      DATABASE_URL: mysql://coffeeniche_user:coffeeniche_pass@coffeeniche-mysql:3306/coffeeniche_db
-    depends_on:
-      coffeeniche-mysql:
-        condition: service_healthy
-    command: >
-      sh -c "npx prisma generate && npx prisma migrate deploy && npx tsx prisma/seed.ts"
-
-  coffeeniche-mysql:
+  mysql:
     image: mysql:8.0
     container_name: coffeeniche-mysql
     restart: unless-stopped
@@ -46,6 +18,22 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: coffeeniche-app
+    container_name: coffeeniche-app
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    environment:
+      DATABASE_URL: mysql://coffeeniche_user:coffeeniche_pass@mysql:3306/coffeeniche_db
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: sh -c "npx prisma migrate deploy && npx prisma generate && npm run build && npm start"
 
 volumes:
   coffeeniche_mysql_data:
