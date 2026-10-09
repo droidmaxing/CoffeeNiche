@@ -66,7 +66,6 @@ export const usePosStore = create<PosState>()((set, get) => ({
         variantName: variant?.name,
         unitPrice: basePrice,
         quantity: 1,
-        selectedModifiers: [],
         selectedModifiers,
         subtotal: basePrice + selectedModifiers.reduce((sum, modifier) => sum + modifier.price, 0),
       };

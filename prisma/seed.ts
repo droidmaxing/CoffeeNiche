@@ -1,4 +1,5 @@
 import { PrismaClient, Status, UserRole, DiscountType, VoucherStatus } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
@@ -18,12 +19,12 @@ async function main() {
 
   await prisma.user.upsert({
     where: { email: "owner@coffeeniche.id" },
-    update: { password: "$2b$12$zt9H8EIXIcVo9IWfMzb0Ve/a0XIE72udcxVCNw4zMv9JrJUsOr4Nq" },
+    update: { password: bcrypt.hashSync("coffeeniche123", 10) },
     create: {
       id: "user-owner",
       name: "Owner",
       email: "owner@coffeeniche.id",
-      password: "$2b$12$zt9H8EIXIcVo9IWfMzb0Ve/a0XIE72udcxVCNw4zMv9JrJUsOr4Nq",
+      password: bcrypt.hashSync("coffeeniche123", 10),
       role: UserRole.OWNER,
       status: Status.ACTIVE,
       storeId: store.id,
@@ -32,12 +33,12 @@ async function main() {
 
   await prisma.user.upsert({
     where: { email: "admin@coffeeniche.id" },
-    update: { password: "$2b$12$zt9H8EIXIcVo9IWfMzb0Ve/a0XIE72udcxVCNw4zMv9JrJUsOr4Nq" },
+    update: { password: bcrypt.hashSync("coffeeniche123", 10) },
     create: {
       id: "user-admin",
       name: "Admin",
       email: "admin@coffeeniche.id",
-      password: "$2b$12$zt9H8EIXIcVo9IWfMzb0Ve/a0XIE72udcxVCNw4zMv9JrJUsOr4Nq",
+      password: bcrypt.hashSync("coffeeniche123", 10),
       role: UserRole.ADMIN,
       status: Status.ACTIVE,
       storeId: store.id,
@@ -46,12 +47,12 @@ async function main() {
 
   await prisma.user.upsert({
     where: { email: "kasir@coffeeniche.id" },
-    update: { password: "$2b$12$zt9H8EIXIcVo9IWfMzb0Ve/a0XIE72udcxVCNw4zMv9JrJUsOr4Nq" },
+    update: { password: bcrypt.hashSync("coffeeniche123", 10) },
     create: {
       id: "user-cashier",
       name: "Kasir",
       email: "kasir@coffeeniche.id",
-      password: "$2b$12$zt9H8EIXIcVo9IWfMzb0Ve/a0XIE72udcxVCNw4zMv9JrJUsOr4Nq",
+      password: bcrypt.hashSync("coffeeniche123", 10),
       role: UserRole.CASHIER,
       status: Status.ACTIVE,
       storeId: store.id,

@@ -15,9 +15,9 @@ services:
       - coffeeniche_mysql_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot_pass"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   app:
     build:
@@ -33,7 +33,7 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-    command: sh -c "npx prisma migrate deploy && npx prisma generate && npm run build && npm start"
+    command: sh -c "npx prisma migrate deploy && npx prisma generate && npm run db:seed && npm run build || true && npm start"
 
 volumes:
   coffeeniche_mysql_data:
