@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Edit, Trash2, Ticket, Check, X } from "lucide-react";
+import { Plus, Edit, Trash2, Ticket } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { demoVoucherOptions } from "@/stores/pos-store";
 import type { Voucher } from "@/types";

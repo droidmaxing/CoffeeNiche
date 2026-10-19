@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { voucherDiscount } from "@/lib/voucher";
 
 const validationSchema = z.object({
   code: z.string().trim().min(2).max(40),
@@ -37,11 +38,7 @@ export async function POST(request: Request) {
   }
 
   const type = voucher.type === DiscountType.PERCENTAGE ? "percentage" : "nominal";
-  let discount = type === "percentage"
-    ? parsed.data.subtotal * (Number(voucher.value) / 100)
-    : Number(voucher.value);
-  if (voucher.maxDiscount !== null) discount = Math.min(discount, Number(voucher.maxDiscount));
-  discount = Math.min(Math.round(discount), parsed.data.subtotal);
+  const discount = voucherDiscount(voucher, parsed.data.subtotal);
 
   return NextResponse.json({
     id: voucher.id,

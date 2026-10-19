@@ -1,7 +1,7 @@
 "use client";
 
 import { usePosStore } from "@/stores/pos-store";
-import { Search, SlidersHorizontal, Plus, Minus, Trash2, CreditCard, Percent, Wallet, Ticket, X } from "lucide-react";
+import { Search, SlidersHorizontal, Plus, Minus, Trash2, CreditCard, Wallet, Ticket, X } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 export default function TransactionsPage() {

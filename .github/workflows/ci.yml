@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-and-test:
-    name: Lint, Typecheck & Build
+    name: Lint, Typecheck, Test & Build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -32,8 +32,11 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
 
+      - name: Run Unit Tests
+        run: npm test
+
       - name: Build Next.js application
         env:
           DATABASE_URL: mysql://dummy_user:dummy_pass@127.0.0.1:3306/coffeeniche_db
-          AUTH_SECRET: ci_secret_dummy_must_be_at_least_32_characters_long
+          NEXTAUTH_SECRET: ci_secret_dummy_must_be_at_least_32_characters_long
         run: npm run build

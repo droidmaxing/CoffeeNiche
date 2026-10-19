@@ -1,4 +1,3 @@
-version: "3.8"
 services:
   mysql:
     image: mysql:8.0
@@ -30,6 +29,8 @@ services:
       - "3002:3000"
     environment:
       DATABASE_URL: mysql://coffeeniche_user:coffeeniche_pass@mysql:3306/coffeeniche_db
+      NEXTAUTH_SECRET: coffeeniche-dev-secret-32-chars-long!!
+      AUTH_TRUST_HOST: "true"
     depends_on:
       mysql:
         condition: service_healthy

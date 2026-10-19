@@ -1,8 +1,9 @@
-import { DiscountType, TransactionStatus, VoucherStatus } from "@prisma/client";
+import { TransactionStatus, VoucherStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { voucherDiscount } from "@/lib/voucher";
 
 const checkoutSchema = z.object({
   items: z.array(z.object({
@@ -87,11 +88,7 @@ export async function POST(request: Request) {
         if (!voucher) throw new Error("VOUCHER_UNAVAILABLE");
         if (voucher.usageLimit !== null && voucher.usedCount >= voucher.usageLimit) throw new Error("VOUCHER_EXHAUSTED");
         if (voucher.minPurchase && subtotal < Number(voucher.minPurchase)) throw new Error("VOUCHER_MINIMUM");
-        discount = voucher.type === DiscountType.PERCENTAGE
-          ? subtotal * (Number(voucher.value) / 100)
-          : Number(voucher.value);
-        if (voucher.maxDiscount !== null) discount = Math.min(discount, Number(voucher.maxDiscount));
-        discount = Math.min(Math.round(discount), subtotal);
+        discount = voucherDiscount(voucher, subtotal);
 
         if (voucher.usageLimit !== null) {
           const usage = await tx.voucher.updateMany({
